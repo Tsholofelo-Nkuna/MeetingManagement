@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { MeetingDto, MeetingType } from '../../models/meeting.dto';
 import { MeetingConfig } from './meeting.config';
 import { ConnectedPosition } from '@angular/cdk/overlay';
-import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MeetingItemDto } from '../../models/meeting-item.dto';
 import { MeetingService } from '../../services/meeting.service';
 import { catchError, forkJoin, of } from 'rxjs';
@@ -36,15 +36,19 @@ export class MeetingComponent implements OnInit {
   constructor() {
     var formConfig=  this.config.columnConfig.reduce((carry, next) => {
 
-     const partialObj =  {[next.key]: new FormControl(null) }
+     const partialObj =  {[next.key]: new FormControl(null, Validators.required) }
      return {...carry, ...partialObj}
       }, {} as {[k: string]: FormControl});
       this.newMeetingForm = this.formBuilder.group(formConfig);
 
      const itemFormConfig = this.config.meetingItemFieldConfig.reduce((carry, next) => {
-       return ({...carry, ...{[next.key]: new FormControl(null)}})
+       return ({...carry, ...{[next.key]: new FormControl(null, Validators.required)}})
      }, {} as {[k: string]: FormControl});
      this.itemForm = this.formBuilder.group(itemFormConfig);
+  }
+
+  createNewDisabled(formType: FormType){
+   return formType === 'meeting' ? this.newMeetingForm.invalid : this.itemForm.invalid;
   }
 
   ngOnInit(): void {

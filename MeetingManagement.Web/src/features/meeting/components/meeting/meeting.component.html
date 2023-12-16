@@ -140,7 +140,8 @@
     <ng-container *ngTemplateOutlet="formFieldTemplate; context {$implicit: fieldConfig, formControl: getControl(fieldConfig.key, formType), formType }"></ng-container>
   </div>
   <div>
-    <button mat-raised-button color="primary" (click)="saveNew(formType)">
+    <p *ngIf="createNewDisabled(formType)" style="font-size:0.83em;color:#AA0000">Fill in all required fields</p>
+    <button [disabled]="createNewDisabled(formType)" mat-raised-button color="primary" (click)="saveNew(formType)">
       <mat-icon fontIcon="save"></mat-icon>
       Save
     </button>
