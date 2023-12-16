@@ -6,7 +6,7 @@ import { MeetingItemDto } from '../models/meeting-item.dto';
 @Injectable()
 export class MeetingService {
 
-  apiEndPoint = 'https://localhost:7076/api/Meeting';
+  apiEndPoint = 'https://tsholo.growthlytix.co.za/api/Meeting';
   constructor(private _httpClient: HttpClient) { }
 
   getMeetings(){
