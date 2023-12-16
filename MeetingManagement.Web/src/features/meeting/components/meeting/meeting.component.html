@@ -1,0 +1,148 @@
+<h2 style="text-align: center;padding-top:1em;">Meeting Management</h2>
+
+<mat-tab-group (selectedIndexChange)="editIndex = -1;">
+  <mat-tab label="Meetings">
+    <div class="button--panel">
+      <button (click)="overlayIsOpen = !overlayIsOpen;" #overlayOrigin="cdkOverlayOrigin" cdkOverlayOrigin mat-raised-button color="primary">
+        <mat-icon fontIcon="add"></mat-icon> Capture
+      </button>
+    </div>
+    <div>
+      <ng-container *ngTemplateOutlet="dataTable; context {$implicit: meetings, columnConfig: config.columnConfig, formType: 'meeting'}">
+      </ng-container>
+    </div>
+  </mat-tab>
+  <mat-tab label="Items">
+    <div class="button--panel">
+      <button (click)="itemOverlayIsOpen=true;" #itemOverlayOrigin="cdkOverlayOrigin" cdkOverlayOrigin mat-raised-button color="primary">New Item</button>
+    </div>
+    <ng-container *ngTemplateOutlet="dataTable; context {$implicit: meetingItems, columnConfig: config.meetingItemFieldConfig, formType: 'item'}">
+    </ng-container>
+  </mat-tab>
+</mat-tab-group>
+
+<ng-template #dataTable let-tableData let-columnConfig ="columnConfig" let-formType="formType">
+  <table class="default--table">
+    <tr>
+      <th *ngFor="let colConfig of columnConfig">
+        {{colConfig.label}}
+      </th>
+      <th></th>
+    </tr>
+    <tr *ngFor="let record of tableData; let rowIndex=index">
+      <td *ngFor="let colConfig of columnConfig">
+        <ng-container *ngTemplateOutlet="inputFieldTemplate; context {$implicit: record, fieldConfig: colConfig, editIndex: rowIndex, readOnlyRecord: formType === 'meeting' ? meetingsClone[rowIndex]: meetingItemsClone[rowIndex], formType}"></ng-container>
+      </td>
+      <td>
+        <span *ngIf="editIndex === -1" style="cursor: pointer" (click)="editIndex = rowIndex;"><mat-icon color="primary" fontIcon="edit"></mat-icon></span>
+        <span *ngIf="rowIndex === editIndex" style="cursor: pointer" (click)="editIndex = -1;editRecord(formType, record);"><mat-icon color="primary" fontIcon="save"></mat-icon></span>
+        <span *ngIf="rowIndex=== editIndex" style="cursor: pointer" (click)="editIndex = -1;"><mat-icon color="primary" fontIcon="close"></mat-icon></span>
+      </td>
+    </tr>
+    <tr *ngIf="(tableData?.length ?? 0) === 0">
+      <td [attr.colspan]="columnConfig.length">No Data</td>
+    </tr>
+  </table>
+</ng-template>
+
+<ng-template #inputFieldTemplate
+             let-data let-fieldConfig="fieldConfig"
+             let-formControl="formControl"
+             let-currentEditIndex="editIndex"
+             let-readOnlyRecord ="readOnlyRecord"
+             let-formType="formType">
+  <ng-container *ngIf="currentEditIndex == editIndex">
+    <ng-container [ngSwitch]="fieldConfig.controlType">
+      <ng-container *ngSwitchCase="'input'">
+        <mat-form-field>
+          <input matInput [(ngModel)]="data[fieldConfig.key]" />
+        </mat-form-field>
+      </ng-container>
+      <ng-container *ngSwitchCase="'select'">
+        <mat-form-field>
+          <mat-select [(ngModel)]="data[fieldConfig.key]" [multiple]="formType == 'meeting' && fieldConfig.key === 'items'">
+            <ng-container *ngIf="formType == 'meeting' && fieldConfig.key === 'type'">
+              <mat-option *ngFor="let option of config.meetingTypeOptions" [value]="option.value">
+                {{option.label}}
+              </mat-option>
+            </ng-container>
+            <ng-container *ngIf="formType == 'meeting' && fieldConfig.key === 'items'">
+              <mat-option *ngFor="let option of meetingItemsClone" [value]="option.id">{{option.name}}</mat-option>
+            </ng-container>
+          </mat-select>
+        </mat-form-field>
+      </ng-container>
+    </ng-container>
+  </ng-container>
+  <ng-container *ngIf="currentEditIndex !== editIndex">
+    <span>{{display(readOnlyRecord, fieldConfig.key)}}</span>
+  </ng-container>
+</ng-template>
+
+<ng-template #formFieldTemplate let-fieldConfig let-formControl="formControl" let-formType="formType">
+  <ng-container [ngSwitch]="fieldConfig.controlType">
+    <ng-container *ngSwitchCase="'input'">
+      <mat-form-field>
+        <mat-label>{{fieldConfig.label}}</mat-label>
+        <input matInput [formControl]="formControl" />
+      </mat-form-field>
+    </ng-container>
+    <ng-container *ngSwitchCase="'select'">
+      <mat-form-field>
+        <mat-label>{{fieldConfig.label}}</mat-label>
+        <mat-select [formControl]="formControl" [multiple] ="formType == 'meeting' && fieldConfig.key === 'items'">
+          <ng-container *ngIf="formType == 'meeting' && fieldConfig.key === 'type'">
+            <mat-option *ngFor="let option of config.meetingTypeOptions" [value]="option.value">
+              {{option.label}}
+            </mat-option>
+          </ng-container>
+          <ng-container *ngIf="formType == 'meeting' && fieldConfig.key === 'items'">
+            <mat-option *ngFor="let option of meetingItemsClone" [value]="option.id">{{option.name}}</mat-option>
+          </ng-container>
+        </mat-select>
+      </mat-form-field>
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<ng-template cdkConnectedOverlay
+             [cdkConnectedOverlayOrigin]="overlayOrigin"
+             [cdkConnectedOverlayOpen] ="overlayIsOpen"
+             [cdkConnectedOverlayPositions]="overlayPositions"
+             [cdkConnectedOverlayPush]="true">
+  <div [formGroup]="newMeetingForm" class="default--overlay--content">
+    <div style="display:flex;flex-direction:row-reverse">
+      <span style="cursor:pointer;"><mat-icon fontIcon="close" (click)="overlayIsOpen=false;"></mat-icon></span>
+    </div>
+    <h2>New Meeting</h2>
+    <ng-container *ngTemplateOutlet="createNewFormTemplate; context {$implicit: config.columnConfig, formType: 'meeting'}">
+    </ng-container>
+  </div>
+</ng-template>
+
+<ng-template cdkConnectedOverlay
+             [cdkConnectedOverlayOrigin]="itemOverlayOrigin"
+             [cdkConnectedOverlayOpen]="itemOverlayIsOpen"
+             [cdkConnectedOverlayPositions]="overlayPositions"
+             [cdkConnectedOverlayPush]="true">
+  <div [formGroup]="newMeetingForm" class="default--overlay--content">
+    <div style="display:flex;flex-direction:row-reverse">
+      <span style="cursor:pointer;"><mat-icon fontIcon="close" (click)="itemOverlayIsOpen=false;"></mat-icon></span>
+    </div>
+    <h2>New Item</h2>
+    <ng-container *ngTemplateOutlet="createNewFormTemplate; context {$implicit: config.meetingItemFieldConfig, formType: 'item'}">
+    </ng-container>
+  </div>
+</ng-template>
+
+<ng-template #createNewFormTemplate let-columnConfig let-formType="formType">
+  <div *ngFor="let fieldConfig of columnConfig">
+    <ng-container *ngTemplateOutlet="formFieldTemplate; context {$implicit: fieldConfig, formControl: getControl(fieldConfig.key, formType), formType }"></ng-container>
+  </div>
+  <div>
+    <button mat-raised-button color="primary" (click)="saveNew(formType)">
+      <mat-icon fontIcon="save"></mat-icon>
+      Save
+    </button>
+  </div>
+</ng-template>

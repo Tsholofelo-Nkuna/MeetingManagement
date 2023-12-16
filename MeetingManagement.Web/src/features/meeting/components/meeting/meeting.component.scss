@@ -1,0 +1,23 @@
+.default--table {
+  width: 100%;
+
+  tr:first-child {
+    background-color: lightgray;
+    padding: 0.5em;
+  }
+
+  tr:not(:first-child) {
+    padding: 0.25em;
+    border-bottom: 1px solid white;
+
+    td {
+      text-align: center;
+    }
+  }
+}
+
+.button--panel {
+   display:flex;
+   flex-direction: row-reverse;
+   padding: 0.5em;
+}
